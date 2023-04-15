@@ -4,7 +4,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 app.use(express.json());
-const port = 3000;
+const port = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
