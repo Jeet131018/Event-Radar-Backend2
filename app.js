@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 var cors = require("cors");
 const bodyParser = require("body-parser");
-const { devpost_scrape } = require("./scraper/scraper");
+const { devpost_scrape, devfolio_scrape, eventbrite_scrape } = require("./scraper/scraper");
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,10 +42,18 @@ app.post("/scrape", function (req, response) {
 
   if (url.includes("devpost")) {
     devpost_scrape(url).then((data) => {
-      // console.log(data);
+      response.send(data);
+    });
+  } else if (url.includes("devfolio")) {
+    devfolio_scrape(url).then((data) => {
+      response.send(data);
+    });
+  } else if (url.includes("eventbrite")) {
+    eventbrite_scrape(url).then((data) => {
       response.send(data);
     });
   }
+
 });
 
 app.post("/addEvent", (req, res) => {

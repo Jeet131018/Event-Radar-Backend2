@@ -86,6 +86,7 @@ async function devfolio_scrape(url) {
         eventDetails.settings.telegram,
         eventDetails.settings.slack,
         eventDetails.settings.discord,
+        eventDetails.settings.site,
       ],
       eventFees:0,
     };
