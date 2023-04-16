@@ -24,4 +24,35 @@ async function devpost_scrape(url){
     return datas;
   }
 
-  module.exports={devpost_scrape}
+async function eventbrite_scrape(url) {
+    let response = {};
+    await axios.get(url).then(res => {
+        const $ = cheerio.load(res.data);
+        const eventData = JSON.parse($('script[type="application/ld+json"]').html().trim());
+        const data = {
+            eventName: eventData.name,
+            eventEndDate: new Date(eventData.endDate).getTime(),
+            eventAddress: eventData.location.address.streetAddress,
+            eventStartDate: new Date(eventData.startDate).getTime(),
+            eventRegistrationLink: eventData.url,
+            eventDescription: $('.has-user-generated-content div').html(),
+            eventOrganizer: eventData.organizer.name,
+            eventOrganizerSocials: $('div.css-ojn45 a').map((index, element) => $(element).attr('href')).get(),
+            eventPriceLowerBound: eventData.offers[0].lowPrice,
+            eventPriceUpperBound: eventData.offers[0].highPrice
+        };
+        response = data;
+    });
+    return response;
+} 
+
+
+  
+
+
+
+
+module.exports = {
+    devpost_scrape, 
+    eventbrite_scrape,
+};
