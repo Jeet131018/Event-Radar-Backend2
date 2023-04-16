@@ -59,7 +59,43 @@ async function eventbrite_scrape(url) {
   return response;
 }
 
+
+async function devfolio_scrape(url) {
+  let response = {};
+  await axios.get(url).then(res => {
+    const $ = cheerio.load(res.data);
+    const eventData = JSON.parse($('#').html().trim());
+    const eventDetails = eventData.props.pageProps.hackathon;
+    const data = {
+      eventName: eventDetails.name,
+      eventEndDate: new Date(eventDetails.ends_at).getTime(),
+      eventAddress: eventData.location.address.streetAddress,
+      eventStartDate: new Date(eventDetails.starts_at).getTime(),
+      eventRegistrationLink: eventData.query.slug[0],
+      eventDescription: eventDetails.desc,
+      eventFee: 0,
+      eventPrize: eventData.props.pageProps.aggregatePrizeValue,
+      eventOrganizer: eventData.organizer.name,
+      eventOrganizerSocials: [
+        eventDetails.settings.linkedin,
+        eventDetails.settings.twitter,
+        eventDetails.settings.facebook,
+        eventDetails.settings.instagram,
+        eventDetails.settings.medium,
+        eventDetails.settings.telegram,
+        eventDetails.settings.slack,
+        eventDetails.settings.discord,
+      ],
+      eventPriceLowerBound: eventData.offers[0].lowPrice,
+      eventPriceUpperBound: eventData.offers[0].highPrice
+    };
+    response = data;
+  });
+  return response;
+}
+
 module.exports = {
   devpost_scrape,
   eventbrite_scrape,
+  devfolio_scrape,
 };
