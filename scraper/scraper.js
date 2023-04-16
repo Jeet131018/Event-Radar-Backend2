@@ -53,6 +53,7 @@ async function eventbrite_scrape(url) {
         .get(),
       eventPriceLowerBound: eventData.offers[0].lowPrice,
       eventPriceUpperBound: eventData.offers[0].highPrice,
+      eventPrize: ""
     };
     response = data;
   });
@@ -86,8 +87,7 @@ async function devfolio_scrape(url) {
         eventDetails.settings.slack,
         eventDetails.settings.discord,
       ],
-      eventPriceLowerBound: eventData.offers[0].lowPrice,
-      eventPriceUpperBound: eventData.offers[0].highPrice
+      eventFees:0,
     };
     response = data;
   });
