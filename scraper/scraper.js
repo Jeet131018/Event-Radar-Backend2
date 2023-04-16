@@ -13,7 +13,7 @@ async function devpost_scrape(url){
             fees:"",
             startDate: dt.getTime(),
             endDate:"",
-            venue:"",
+            venue:$('#challenge-information .info:nth-child(2) td:eq(0) div .info').text().replace(/\n/g, "").trim(),
             prizes: $('#challenge-information .info:nth-child(2) td strong span:eq(1)').text(),
             socials:[],
             register: $('#primary a').attr('href'),
