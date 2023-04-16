@@ -1,12 +1,13 @@
-const { Timestamp } = require("bson");
-const { timeEnd } = require("console");
 const express = require("express");
 const mongoose = require("mongoose");
+var cors = require("cors");
 const bodyParser = require("body-parser");
-const {devpost_scrape} = require("./scraper/scraper")
+const { devpost_scrape } = require("./scraper/scraper");
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
+
 const port = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== "production") {
@@ -36,19 +37,16 @@ const eventSchema = {
 
 const Events = mongoose.model("Events", eventSchema);
 
-
-app.post("/scrape", function(req, response){
+app.post("/scrape", function (req, response) {
   var url = req.body.url;
 
-  if(url.includes("devpost")){
-    (devpost_scrape(url).then((data)=>{
+  if (url.includes("devpost")) {
+    devpost_scrape(url).then((data) => {
       // console.log(data);
       response.send(data);
-    }));
+    });
   }
 });
-
-
 
 app.get("/addEvent", (req, res) => {
   const eventData = req.body;
