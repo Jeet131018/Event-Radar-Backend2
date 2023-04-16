@@ -2,13 +2,17 @@ const express = require("express");
 const mongoose = require("mongoose");
 var cors = require("cors");
 const bodyParser = require("body-parser");
-const { devpost_scrape, devfolio_scrape, eventbrite_scrape } = require("./scraper/scraper");
+const {
+  devpost_scrape,
+  devfolio_scrape,
+  eventbrite_scrape,
+} = require("./scraper/scraper");
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
@@ -33,6 +37,7 @@ const eventSchema = {
     website: String,
   },
   registrationLink: String,
+  typeOfEvent: String,
 };
 
 const Events = mongoose.model("Events", eventSchema);
@@ -53,46 +58,52 @@ app.post("/scrape", function (req, response) {
       response.send(data);
     });
   }
-
 });
 
 app.post("/addEvent", (req, res) => {
   const eventData = req.body;
+  let hasMissingParam = false;
 
-  const event = {
-    name: eventData.name,
-    description: eventData.description,
-    fees: eventData.fees,
-    startDate: eventData.startDate,
-    endDate: eventData.endDate,
-    venue: eventData.venue,
-    price: eventData.price,
-    socials: eventData.socials,
-    registrationLink: eventData.registrationLink,
-  };
-
-  for (const key in event) {
-    if (!event[key] && key !== 'fees') {
-      return res.json({
+  for (const key in eventSchema) {
+    if (!eventData[key] && key !== "fees") {
+      hasMissingParam = true;
+      res.send({
         success: false,
-        msg: `missing parameter: ${key}`
+        msg: `missing parameter: ${key}`,
+      });
+      break; // Exit the loop early if a missing parameter is found
+    }
+  }
+
+  if (!hasMissingParam) {
+    const event = {
+      name: eventData.name,
+      description: eventData.description,
+      fees: eventData.fees,
+      startDate: eventData.startDate,
+      endDate: eventData.endDate,
+      venue: eventData.venue,
+      price: eventData.price,
+      socials: eventData.socials,
+      registrationLink: eventData.registrationLink,
+      typeOfEvent: eventData.typeOfEvent,
+    };
+
+    let event2 = new Events(event);
+
+    event2
+      .save()
+      .then(() => {
+        res.json({
+          success: true,
+        });
+      })
+      .catch(() => {
+        res.json({
+          success: false,
+        });
       });
   }
-}
-
-  let event2 = new Events(event);
-  event2
-    .save()
-    .then(() => {
-      res.json({
-        success: true,
-      });
-    })
-    .catch(() => {
-      res.json({
-        success: false,
-      });
-    });
 });
 
 app.get("/getEvents", (req, res) => {
