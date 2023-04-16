@@ -41,19 +41,19 @@ async function eventbrite_scrape(url) {
       $('script[type="application/ld+json"]').html().trim()
     );
     const data = {
-      eventName: eventData.name,
-      eventEndDate: new Date(eventData.endDate).getTime(),
-      eventAddress: eventData.location.address.streetAddress,
-      eventStartDate: new Date(eventData.startDate).getTime(),
-      eventRegistrationLink: eventData.url,
-      eventDescription: $(".has-user-generated-content div").html(),
-      eventOrganizer: eventData.organizer.name,
-      eventOrganizerSocials: $("div.css-ojn45 a")
+      name: eventData.name,
+      description: $(".has-user-generated-content div").html(),
+      fees: eventData.offers[0].lowPrice,
+      eventPriceUpperBound: eventData.offers[0].highPrice,
+      startDate: new Date(eventData.startDate).getTime(),
+      endDate: new Date(eventData.endDate).getTime(),
+      venue: eventData.location.address.streetAddress,
+      registrationLink: eventData.url,
+      socials: $("div.css-ojn45 a")
         .map((index, element) => $(element).attr("href"))
         .get(),
-      eventPriceLowerBound: eventData.offers[0].lowPrice,
-      eventPriceUpperBound: eventData.offers[0].highPrice,
-      eventPrize: ""
+      prize: "",
+      eventOrganizer: eventData.organizer.name,
     };
     response = data;
   });
@@ -68,27 +68,27 @@ async function devfolio_scrape(url) {
     const eventData = JSON.parse($('#').html().trim());
     const eventDetails = eventData.props.pageProps.hackathon;
     const data = {
-      eventName: eventDetails.name,
-      eventEndDate: new Date(eventDetails.ends_at).getTime(),
-      eventAddress: eventData.location.address.streetAddress,
-      eventStartDate: new Date(eventDetails.starts_at).getTime(),
-      eventRegistrationLink: eventData.query.slug[0],
-      eventDescription: eventDetails.desc,
-      eventFee: 0,
-      eventPrize: eventData.props.pageProps.aggregatePrizeValue,
+      name: eventDetails.name,
+      endDate: new Date(eventDetails.ends_at).getTime(),
+      venue: eventData.location.address.streetAddress,
+      startDate: new Date(eventDetails.starts_at).getTime(),
+      registrationLink: eventData.query.slug[0],
+      description: eventDetails.desc,
+      fee: 0,
+      prize: eventData.props.pageProps.aggregatePrizeValue,
       eventOrganizer: eventData.organizer.name,
-      eventOrganizerSocials: [
-        eventDetails.settings.linkedin,
-        eventDetails.settings.twitter,
-        eventDetails.settings.facebook,
-        eventDetails.settings.instagram,
-        eventDetails.settings.medium,
-        eventDetails.settings.telegram,
-        eventDetails.settings.slack,
-        eventDetails.settings.discord,
-        eventDetails.settings.site,
-      ],
-      eventFees:0,
+      socials: {
+        "linkedin": eventDetails.settings.linkedin,
+        "twitter": eventDetails.settings.twitter,
+        "facebook": eventDetails.settings.facebook,
+        "instagram": eventDetails.settings.instagram,
+        "medium": eventDetails.settings.medium,
+        "telegram": eventDetails.settings.telegram,
+        "slack": eventDetails.settings.slack,
+        "discord": eventDetails.settings.discord,
+        "site": eventDetails.settings.site,
+      },
+      fees:0,
     };
     response = data;
   });

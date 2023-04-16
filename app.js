@@ -71,6 +71,15 @@ app.post("/addEvent", (req, res) => {
     registrationLink: eventData.registrationLink,
   };
 
+  for (const key in event) {
+    if (!event[key] && key !== 'fees') {
+      return res.json({
+        success: false,
+        msg: `missing parameter: ${key}`
+      });
+  }
+}
+
   let event2 = new Events(event);
   event2
     .save()
