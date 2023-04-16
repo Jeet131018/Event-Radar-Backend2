@@ -48,7 +48,7 @@ app.post("/scrape", function (req, response) {
   }
 });
 
-app.get("/addEvent", (req, res) => {
+app.post("/addEvent", (req, res) => {
   const eventData = req.body;
 
   const event = {
