@@ -11,7 +11,14 @@ const {
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://event-radar-frontend.vercel.app/",
+      "http://localhost:3000",
+    ],
+  })
+);
 
 const port = process.env.PORT || 3000;
 
@@ -61,18 +68,20 @@ const User = mongoose.model("User", userSchema);
 app.post("/scrape", function (req, response) {
   var url = req.body.url;
 
-  if (url.includes("devpost")) {
-    devpost_scrape(url).then((data) => {
-      response.send(data);
-    });
-  } else if (url.includes("devfolio")) {
-    devfolio_scrape(url).then((data) => {
-      response.send(data);
-    });
-  } else if (url.includes("eventbrite")) {
-    eventbrite_scrape(url).then((data) => {
-      response.send(data);
-    });
+  try {
+    if (url.includes("devpost")) {
+      devpost_scrape(url).then((data) => {
+        response.send(data);
+      });
+    } else if (url.includes("eventbrite")) {
+      eventbrite_scrape(url).then((data) => {
+        response.send(data);
+      });
+    } else {
+      response.send({ name: "", description: "" });
+    }
+  } catch (e) {
+    response.send({ name: "", description: "" });
   }
 });
 
