@@ -11,14 +11,7 @@ const {
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: [
-      "https://event-radar-frontend.vercel.app/",
-      "http://localhost:3000",
-    ],
-  })
-);
+app.use(cors());
 
 const port = process.env.PORT || 3000;
 
