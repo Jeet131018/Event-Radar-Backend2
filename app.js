@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 var cors = require("cors");
 const bodyParser = require("body-parser");
 const {
@@ -24,23 +25,38 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 const eventSchema = {
-  name: String,
-  description: String,
-  fees: Number,
-  startDate: String,
-  endDate: String,
-  venue: String,
-  price: Array,
-  socials: {
-    instagram: String,
-    linkedin: String,
-    website: String,
-  },
   registrationLink: String,
+  name: String,
+  collegeId: String,
+  eventMode: String,
   typeOfEvent: String,
+  eventFeeType: String,
+  fee: String,
+  startDate: Number,
+  endDate: Number,
+  description: String,
 };
 
+const collegeSchema = {
+  collegeId: String,
+  events: Array,
+};
+
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
 const Events = mongoose.model("Events", eventSchema);
+const Colleges = mongoose.model("Colleges", collegeSchema);
+const User = mongoose.model("User", userSchema);
 
 app.post("/scrape", function (req, response) {
   var url = req.body.url;
@@ -62,58 +78,143 @@ app.post("/scrape", function (req, response) {
 
 app.post("/addEvent", (req, res) => {
   const eventData = req.body;
-  let hasMissingParam = false;
+  console.log(eventData);
 
-  for (const key in eventSchema) {
-    if (!eventData[key] && key !== "fees") {
-      hasMissingParam = true;
-      res.send({
+  let event = new Events(eventData);
+
+  event
+    .save()
+    .then((eventDoc) => {
+      console.log(eventDoc.id);
+      Colleges.findOneAndUpdate(
+        { collegeId: eventData.collegeId },
+        { $push: { events: eventDoc.id } },
+        { upsert: true, new: true }
+      )
+        .then(() => {
+          res.json({
+            success: true,
+          });
+        })
+        .catch(() => {
+          res.json({
+            success: false,
+          });
+        });
+    })
+    .catch(() => {
+      res.json({
         success: false,
-        msg: `missing parameter: ${key}`,
       });
-      break; // Exit the loop early if a missing parameter is found
-    }
-  }
-
-  if (!hasMissingParam) {
-    const event = {
-      name: eventData.name,
-      description: eventData.description,
-      fees: eventData.fees,
-      startDate: eventData.startDate,
-      endDate: eventData.endDate,
-      venue: eventData.venue,
-      price: eventData.price,
-      socials: eventData.socials,
-      registrationLink: eventData.registrationLink,
-      typeOfEvent: eventData.typeOfEvent,
-    };
-
-    let event2 = new Events(event);
-
-    event2
-      .save()
-      .then(() => {
-        res.json({
-          success: true,
-        });
-      })
-      .catch(() => {
-        res.json({
-          success: false,
-        });
-      });
-  }
+    });
 });
 
 app.get("/getEvents", (req, res) => {
+  console.log("called");
   Events.find({})
     .then((events) => {
+      console.log({ events });
       res.json(events);
     })
     .catch((err) => {
+      console.log("error");
+
       res.json({});
     });
+});
+
+app.get("/getEvent/:id", (req, res) => {
+  const eventId = req.params.id;
+  console.log(`getEvent called with id ${eventId}`);
+
+  Events.findById(eventId)
+    .then((event) => {
+      console.log({ event });
+      res.json(event);
+    })
+    .catch((err) => {
+      console.log(`Error: ${err.message}`);
+      res.json({});
+    });
+});
+
+app.get("/getColleges", (req, res) => {
+  console.log("called");
+  Colleges.find({})
+    .then((events) => {
+      console.log({ events });
+      res.json(events);
+    })
+    .catch((err) => {
+      console.log("error");
+
+      res.json({});
+    });
+});
+
+app.post("/login", (req, res) => {
+  console.log("login called");
+  const { email, password } = req.body;
+
+  // Find the user with the specified email
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return res.status(400).json({ error: "Invalid credentials" });
+      }
+
+      // Compare the user's input password with the hashed password
+      bcrypt.compare(password, user.password, (err, result) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({ error: "Server error" });
+        }
+
+        if (!result) {
+          return res.status(400).json({ error: "Invalid credentials" });
+        }
+
+        res.json({ success: true });
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: "Server error" });
+    });
+});
+
+app.post("/signup", (req, res) => {
+  const { email, password } = req.body;
+
+  // Generate a salt for password hashing
+  bcrypt.genSalt(10, (err, salt) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    // Hash the password using the salt
+    bcrypt.hash(password, salt, (err, hash) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+
+      // Create a new user object with the hashed password
+      const newUser = new User({ email, password: hash });
+
+      // Save the new user to the database
+      newUser
+        .save()
+        .then(() => {
+          res.json({ success: true });
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(500).json({ error: "Server error" });
+        });
+    });
+  });
 });
 
 app.listen(port, () => {
